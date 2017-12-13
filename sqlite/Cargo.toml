@@ -1,0 +1,32 @@
+[package]
+name = "sqlite"
+version = "0.23.9"
+license = "Apache-2.0/MIT"
+authors = [
+    "Ivan Stankovic <pokemon@fly.srk.fer.hr>",
+    "Ivan Ukhov <ivan.ukhov@gmail.com>",
+    "Jake Kerr <kodafox@gmail.com>",
+    "Pierre Krieger <pierre.krieger1708@gmail.com>",
+    "Tomoki Aonuma <uasi@uasi.jp>",
+]
+description = "The package provides an interface to SQLite."
+documentation = "https://docs.rs/sqlite"
+homepage = "https://github.com/stainless-steel/sqlite"
+repository = "https://github.com/stainless-steel/sqlite"
+readme = "README.md"
+categories = ["api-bindings", "database"]
+keywords = ["database"]
+
+[features]
+default = ["linkage"]
+linkage = ["sqlite3-sys/linkage"]
+
+[dependencies]
+libc = "0.2"
+
+[dependencies.sqlite3-sys]
+version = "0.12"
+default-features = false
+
+[dev-dependencies]
+temporary = "0.6"
