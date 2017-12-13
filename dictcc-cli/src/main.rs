@@ -26,6 +26,7 @@ extern crate sqlite;
 
 use std::env;
 use std::fmt;
+use std::path;
 use std::process;
 use std::result;
 
@@ -71,8 +72,11 @@ const TYPE_COL: &str = "entry_type";
 const USAGE_COL: &str = "vt_usage";
 
 
-fn translate(to_translate: &str) -> Result<()> {
-  let connection = sqlite::open("./data/dictcc-lp1-2017-12-11_small.db")?;
+fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
+where
+  F: FnMut(&str, &str) -> Result<()>,
+{
+  let connection = sqlite::open(db)?;
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
   // particular type sorted by the number of uses before moving on to
@@ -100,7 +104,7 @@ fn translate(to_translate: &str) -> Result<()> {
       "Invalid second column in result: {:?}",
       row
     )))?;
-    println!("{} ({})", german, type_);
+    callback(german, type_)?;
   }
   Ok(())
 }
@@ -112,7 +116,12 @@ fn run() -> i32 {
     return 1;
   }
 
-  match translate(&argv[1]) {
+  let db = path::Path::new("./data/dictcc-lp1.db");
+  let callback = |german: &str, type_: &str| {
+    println!("{} ({})", german, type_);
+    Ok(())
+  };
+  match translate(db, &argv[1], callback) {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);
@@ -123,4 +132,45 @@ fn run() -> i32 {
 
 fn main() {
   process::exit(run());
+}
+
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn no_results() {
+    let db = path::Path::new("./test/test.db");
+    let callback = |_: &str, _: &str| {
+      assert!(false);
+      Err(Error::Error("unreachable".to_string()))
+    };
+
+    // We attempt translation of a word that has no translations. We
+    // expect no errors.
+    translate(db, &"awordthatdoesnotexist", callback).unwrap();
+  }
+
+  #[test]
+  fn translate_nauseating() {
+    let mut found = Vec::new();
+    let db = path::Path::new("./test/test.db");
+    {
+      let callback = |german: &str, type_: &str| {
+        found.push((type_.to_string(), german.to_string()));
+        Ok(())
+      };
+
+      translate(db, &"nauseating", callback).unwrap();
+
+    }
+    assert_eq!(
+      found,
+      vec![
+        ("adj".to_string(), "ekelerregend".to_string()),
+        ("adj".to_string(), "widerlich".to_string()),
+      ]
+    );
+  }
 }
