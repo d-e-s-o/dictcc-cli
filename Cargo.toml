@@ -1,0 +1,15 @@
+[package]
+name = "dictcc-cli"
+version = "0.1.0"
+authors = ["Daniel Mueller <deso@posteo.net>"]
+license = "GPL-3.0+"
+homepage = "https://github.com/d-e-s-o/dictcc-cli"
+repository = "https://github.com/d-e-s-o/dictcc-cli.git"
+readme = "README.md"
+keywords = ["dict", "cli"]
+description = """
+A command line application for translating between languages using dict.cc's database.
+"""
+
+[dependencies.sqlite]
+version = "0.23.9"
