@@ -1,0 +1,20 @@
+[package]
+name = "sqlite3-src"
+version = "0.2.7"
+license = "Apache-2.0/MIT"
+authors = [
+    "Chip Collier <ccollier@machinezone.com>",
+    "Ivan Ukhov <ivan.ukhov@gmail.com>",
+]
+description = "The package provides SQLite."
+homepage = "https://github.com/stainless-steel/sqlite3-src"
+repository = "https://github.com/stainless-steel/sqlite3-src"
+build = "build.rs"
+links = "sqlite3"
+
+[features]
+bundled = []
+
+[build-dependencies]
+gcc = "0.3"
+pkg-config = "0.3"
