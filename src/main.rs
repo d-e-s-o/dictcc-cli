@@ -72,6 +72,14 @@ const TYPE_COL: &str = "entry_type";
 const USAGE_COL: &str = "vt_usage";
 
 
+fn normalize(string: &str) -> String {
+  let mut s = string.to_string();
+  while s.contains("  ") {
+    s = s.replace("  ", " ");
+  }
+  s
+}
+
 fn open(db: &path::Path) -> Result<sqlite::Connection> {
   // Note that sqlite::open by default creates the database if it does
   // not exist. That is not a desired behavior. So we catch cases where
@@ -92,6 +100,9 @@ where
   F: FnMut(&str, &str, &str) -> Result<()>,
 {
   let connection = open(db)?;
+  // Note that the database contains some elements with strings
+  // containing multiple white spaces in succession. As of now we only
+  // support two spaces and will merge them into a single one.
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
   // particular type sorted by the number of uses before moving on to
@@ -102,7 +113,8 @@ where
   let query = format!(
     "SELECT {eng},{ger},{typ} FROM {tbl} \
      WHERE {eng}='{trans}' OR \
-           {eng} LIKE '{trans} [%]' \
+           {eng} LIKE '{trans} [%]' OR \
+           {eng} LIKE '{trans}  [%]' \
      ORDER BY {typ} ASC, \
               {use} DESC;",
     ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
@@ -124,7 +136,7 @@ where
       "Invalid third column in result: {:?}",
       row
     )))?;
-    callback(english, german, type_)?;
+    callback(&normalize(english), &normalize(german), type_)?;
   }
   Ok(())
 }
@@ -220,6 +232,19 @@ mod tests {
       found,
       vec![
         ("surefire [coll.]".to_string(), "adj".to_string(), "todsicher [ugs.]".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_dorky() {
+    let found = collect_translations(&"dorky");
+    assert_eq!(
+      found,
+      vec![
+        ("dorky [coll.]".to_string(), "adj".to_string(), "bekloppt [ugs.]".to_string()),
+        ("dorky [coll.]".to_string(), "adj".to_string(), "idiotisch".to_string()),
+        ("dorky [coll.]".to_string(), "adj".to_string(), "deppert [österr.] [südd.]".to_string()),
       ]
     );
   }
