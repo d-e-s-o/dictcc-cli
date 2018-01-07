@@ -24,6 +24,8 @@ DELETE FROM main_ft WHERE NOT (
   term2 LIKE "dorky [%]" OR
   term2 LIKE "dorky  [%]" OR
   term2 LIKE "surefire [%]" OR
+  (term2 LIKE 'to subjugate' AND entry_type='verb') OR \
+  (term2 LIKE 'to subjugate %' AND entry_type='verb') OR \
   term2 == "nauseating" OR
   term2 == "speciation"
 );
