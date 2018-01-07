@@ -1,7 +1,7 @@
 // main.rs
 
 // *************************************************************************
-// * Copyright (C) 2017 Daniel Mueller (deso@posteo.net)                   *
+// * Copyright (C) 2017-2018 Daniel Mueller (deso@posteo.net)              *
 // *                                                                       *
 // * This program is free software: you can redistribute it and/or modify  *
 // * it under the terms of the GNU General Public License as published by  *
@@ -89,7 +89,7 @@ fn open(db: &path::Path) -> Result<sqlite::Connection> {
 
 fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
 where
-  F: FnMut(&str, &str) -> Result<()>,
+  F: FnMut(&str, &str, &str) -> Result<()>,
 {
   let connection = open(db)?;
   // We order by type first and then by the number of uses. The reason
@@ -100,7 +100,7 @@ where
   //       prepared statement or something of this sort to mitigate SQL
   //       injection problems.
   let query = format!(
-    "SELECT {ger},{typ} FROM {tbl} \
+    "SELECT {eng},{ger},{typ} FROM {tbl} \
      WHERE {eng}='{trans}' \
      ORDER BY {typ} ASC, \
               {use} DESC;",
@@ -111,15 +111,19 @@ where
   let mut cursor = connection.prepare(query)?.cursor();
 
   while let Some(row) = cursor.next()? {
-    let german = row[0].as_string().ok_or_else(|| Error::Error(format!(
+    let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
       "Invalid first column in result: {:?}",
       row
     )))?;
-    let type_ = row[1].as_string().ok_or_else(|| Error::Error(format!(
+    let german = row[1].as_string().ok_or_else(|| Error::Error(format!(
       "Invalid second column in result: {:?}",
       row
     )))?;
-    callback(german, type_)?;
+    let type_ = row[2].as_string().ok_or_else(|| Error::Error(format!(
+      "Invalid third column in result: {:?}",
+      row
+    )))?;
+    callback(english, german, type_)?;
   }
   Ok(())
 }
@@ -132,8 +136,8 @@ fn run() -> i32 {
   }
 
   let db = path::Path::new("./data/dictcc-lp1.db");
-  let callback = |german: &str, type_: &str| {
-    println!("{} ({})", german, type_);
+  let callback = |english: &str, german: &str, type_: &str| {
+    println!("{} ({}): {}", english, type_, german);
     Ok(())
   };
   match translate(db, &argv[1], callback) {
@@ -157,7 +161,7 @@ mod tests {
   #[test]
   fn fail_db_not_found() {
     let db = path::Path::new("./test/does_not_exist.db");
-    let callback = |_: &str, _: &str| {
+    let callback = |_: &str, _: &str, _: &str| {
       assert!(false);
       Err(Error::Error("unreachable".to_string()))
     };
@@ -172,7 +176,7 @@ mod tests {
   #[test]
   fn no_results() {
     let db = path::Path::new("./test/test.db");
-    let callback = |_: &str, _: &str| {
+    let callback = |_: &str, _: &str, _: &str| {
       assert!(false);
       Err(Error::Error("unreachable".to_string()))
     };
@@ -187,8 +191,8 @@ mod tests {
     let mut found = Vec::new();
     let db = path::Path::new("./test/test.db");
     {
-      let callback = |german: &str, type_: &str| {
-        found.push((type_.to_string(), german.to_string()));
+      let callback = |english: &str, german: &str, type_: &str| {
+        found.push((english.to_string(), type_.to_string(), german.to_string()));
         Ok(())
       };
 
@@ -198,8 +202,8 @@ mod tests {
     assert_eq!(
       found,
       vec![
-        ("adj".to_string(), "ekelerregend".to_string()),
-        ("adj".to_string(), "widerlich".to_string()),
+        ("nauseating".to_string(), "adj".to_string(), "ekelerregend".to_string()),
+        ("nauseating".to_string(), "adj".to_string(), "widerlich".to_string()),
       ]
     );
   }
