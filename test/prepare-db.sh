@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # *************************************************************************
-# * Copyright (C) 2017 Daniel Mueller (deso@posteo.net)                   *
+# * Copyright (C) 2017-2018 Daniel Mueller (deso@posteo.net)              *
 # *                                                                       *
 # * This program is free software: you can redistribute it and/or modify  *
 # * it under the terms of the GNU General Public License as published by  *
@@ -21,6 +21,7 @@
 cp dictcc-lp1.db test.db
 sqlite3 test.db < <(cat <<EOF
 DELETE FROM main_ft WHERE NOT (
+  term2 LIKE "surefire [%]" OR
   term2 == "nauseating" OR
   term2 == "speciation"
 );

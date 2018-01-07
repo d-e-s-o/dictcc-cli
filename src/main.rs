@@ -101,7 +101,8 @@ where
   //       injection problems.
   let query = format!(
     "SELECT {eng},{ger},{typ} FROM {tbl} \
-     WHERE {eng}='{trans}' \
+     WHERE {eng}='{trans}' OR \
+           {eng} LIKE '{trans} [%]' \
      ORDER BY {typ} ASC, \
               {use} DESC;",
     ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
@@ -186,8 +187,7 @@ mod tests {
     translate(db, &"awordthatdoesnotexist", callback).unwrap();
   }
 
-  #[test]
-  fn translate_nauseating() {
+  fn collect_translations(to_translate: &str) -> Vec<(String, String, String)> {
     let mut found = Vec::new();
     let db = path::Path::new("./test/test.db");
     {
@@ -196,14 +196,30 @@ mod tests {
         Ok(())
       };
 
-      translate(db, &"nauseating", callback).unwrap();
-
+      translate(db, to_translate, callback).unwrap();
     }
+    found
+  }
+
+  #[test]
+  fn translate_nauseating() {
+    let found = collect_translations(&"nauseating");
     assert_eq!(
       found,
       vec![
         ("nauseating".to_string(), "adj".to_string(), "ekelerregend".to_string()),
         ("nauseating".to_string(), "adj".to_string(), "widerlich".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_surefire() {
+    let found = collect_translations(&"surefire");
+    assert_eq!(
+      found,
+      vec![
+        ("surefire [coll.]".to_string(), "adj".to_string(), "todsicher [ugs.]".to_string()),
       ]
     );
   }
