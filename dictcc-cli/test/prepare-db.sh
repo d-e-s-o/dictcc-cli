@@ -21,6 +21,8 @@
 cp dictcc-lp1.db test.db
 sqlite3 test.db < <(cat <<EOF
 DELETE FROM main_ft WHERE NOT (
+  term2 LIKE "dorky [%]" OR
+  term2 LIKE "dorky  [%]" OR
   term2 LIKE "surefire [%]" OR
   term2 == "nauseating" OR
   term2 == "speciation"
