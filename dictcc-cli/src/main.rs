@@ -114,9 +114,12 @@ where
     "SELECT {eng},{ger},{typ} FROM {tbl} \
      WHERE {eng}='{trans}' OR \
            {eng} LIKE '{trans} [%]' OR \
-           {eng} LIKE '{trans}  [%]' \
+           {eng} LIKE '{trans}  [%]' OR \
+           ({eng} LIKE 'to {trans}' AND {typ}='verb') OR \
+           ({eng} LIKE 'to {trans} %' AND {typ}='verb') \
      ORDER BY {typ} ASC, \
-              {use} DESC;",
+              {use} DESC, \
+              {eng} ASC;",
     ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
     trans = to_translate, use = USAGE_COL,
   );
@@ -245,6 +248,24 @@ mod tests {
         ("dorky [coll.]".to_string(), "adj".to_string(), "bekloppt [ugs.]".to_string()),
         ("dorky [coll.]".to_string(), "adj".to_string(), "idiotisch".to_string()),
         ("dorky [coll.]".to_string(), "adj".to_string(), "deppert [österr.] [südd.]".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_subjugate() {
+    let found = collect_translations(&"subjugate");
+    assert_eq!(
+      found,
+      vec![
+        ("to subjugate".to_string(), "verb".to_string(), "unterwerfen".to_string()),
+        ("to subjugate".to_string(), "verb".to_string(), "bezwingen".to_string()),
+        ("to subjugate".to_string(), "verb".to_string(), "unterjochen".to_string()),
+        (
+          "to subjugate sb./sth.".to_string(),
+          "verb".to_string(),
+          "jdn./etw. knechten [geh.] [pej.] [unterwerfen]".to_string()
+        ),
       ]
     );
   }
