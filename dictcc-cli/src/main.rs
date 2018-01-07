@@ -100,7 +100,14 @@ where
   F: FnMut(&str, &str, &str) -> Result<()>,
 {
   let connection = open(db)?;
-  // Note that the database contains some elements with strings
+  // Note that for some reason some terms in the database do not have a
+  // proper type associated with them. We make this fact a little more
+  // explicit by replacing the empty string. Note that it is important
+  // to properly handle this problem at the level of SQL. We sort by the
+  // type column and if we perform the replacement afterwards we mess up
+  // the order because the empty string '' is sorted before all other
+  // strings.
+  // Note also that the database contains some elements with strings
   // containing multiple white spaces in succession. As of now we only
   // support two spaces and will merge them into a single one.
   // We order by type first and then by the number of uses. The reason
@@ -111,13 +118,18 @@ where
   //       prepared statement or something of this sort to mitigate SQL
   //       injection problems.
   let query = format!(
-    "SELECT {eng},{ger},{typ} FROM {tbl} \
+    "SELECT {eng},{ger}, \
+       CASE {typ} WHEN '' \
+         THEN 'unknown' \
+         ELSE entry_type \
+       END AS __type__ \
+     FROM {tbl} \
      WHERE {eng}='{trans}' OR \
            {eng} LIKE '{trans} [%]' OR \
            {eng} LIKE '{trans}  [%]' OR \
-           ({eng} LIKE 'to {trans}' AND {typ}='verb') OR \
-           ({eng} LIKE 'to {trans} %' AND {typ}='verb') \
-     ORDER BY {typ} ASC, \
+           ({eng} LIKE 'to {trans}' AND __type__='verb') OR \
+           ({eng} LIKE 'to {trans} %' AND __type__='verb') \
+     ORDER BY __type__ ASC, \
               {use} DESC, \
               {eng} ASC;",
     ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
@@ -266,6 +278,18 @@ mod tests {
           "verb".to_string(),
           "jdn./etw. knechten [geh.] [pej.] [unterwerfen]".to_string()
         ),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_love() {
+    let found = collect_translations(&"love");
+    assert_eq!(
+      found,
+      vec![
+        ("love".to_string(), "noun".to_string(), "Liebe {f}".to_string()),
+        ("love".to_string(), "unknown".to_string(), "null [beim Tennis]".to_string()),
       ]
     );
   }
