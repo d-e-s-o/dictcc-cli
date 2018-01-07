@@ -72,11 +72,26 @@ const TYPE_COL: &str = "entry_type";
 const USAGE_COL: &str = "vt_usage";
 
 
+fn open(db: &path::Path) -> Result<sqlite::Connection> {
+  // Note that sqlite::open by default creates the database if it does
+  // not exist. That is not a desired behavior. So we catch cases where
+  // the database does not exist in advance.
+  if !db.exists() {
+    let path = db.to_str().ok_or_else(|| Error::Error(
+      "No database given".to_string()
+    ))?;
+    Err(Error::Error(format!("Database {} not found", path).to_string()))
+  } else {
+    let connection = sqlite::open(db)?;
+    Ok(connection)
+  }
+}
+
 fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
 where
   F: FnMut(&str, &str) -> Result<()>,
 {
-  let connection = sqlite::open(db)?;
+  let connection = open(db)?;
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
   // particular type sorted by the number of uses before moving on to
@@ -138,6 +153,21 @@ fn main() {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn fail_db_not_found() {
+    let db = path::Path::new("./test/does_not_exist.db");
+    let callback = |_: &str, _: &str| {
+      assert!(false);
+      Err(Error::Error("unreachable".to_string()))
+    };
+
+    let err = translate(db, &"", callback).unwrap_err();
+    match err {
+      Error::Error(x) => assert_eq!(x, "Database ./test/does_not_exist.db not found"),
+      _ => panic!("Unexpected error: {}", err),
+    }
+  }
 
   #[test]
   fn no_results() {
