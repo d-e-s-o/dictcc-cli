@@ -10,6 +10,7 @@ keywords = ["dict", "cli"]
 description = """
 A command line application for translating between languages using dict.cc's database.
 """
+build = "build.rs"
 
 [dependencies.gcc]
 version = "0.3.54"

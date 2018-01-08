@@ -1,0 +1,91 @@
+vec![sqlite::Value::String(
+  to_translate.to_string() + " [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + "  [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " [%] {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " [%] <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + "  [%] {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + "  [%] <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%}  [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%>  [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " [%] {%} <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " [%] <%> {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} [%] <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} <%> [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> [%] {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> {%} [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + "  [%] {%} <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + "  [%] <%> {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%}  [%] <%>"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " {%} <%>  [%]"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%>  [%] {%}"
+),
+sqlite::Value::String(
+  to_translate.to_string() + " <%> {%}  [%]"
+),
+]
