@@ -21,14 +21,15 @@
 cp dictcc-lp1.db test.db
 sqlite3 test.db < <(cat <<EOF
 DELETE FROM main_ft WHERE NOT (
+  term2 LIKE "christmas" OR
   term2 LIKE "dorky [%]" OR
   term2 LIKE "dorky  [%]" OR
+  term2 LIKE "love" OR
+  term2 LIKE "nauseating" OR
+  term2 LIKE "speciation" OR
   term2 LIKE "surefire [%]" OR
   (term2 LIKE 'to subjugate' AND entry_type='verb') OR \
-  (term2 LIKE 'to subjugate %' AND entry_type='verb') OR \
-  term2 == "love" OR
-  term2 == "nauseating" OR
-  term2 == "speciation"
+  (term2 LIKE 'to subjugate %' AND entry_type='verb')
 );
 DROP INDEX sw_term4search;
 DROP TABLE subjects;

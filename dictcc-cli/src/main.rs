@@ -121,7 +121,7 @@ where
          ELSE entry_type \
        END AS __type__ \
      FROM {tbl} \
-     WHERE {eng}=? OR \
+     WHERE {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            ({eng} LIKE ? AND __type__='verb') OR \
@@ -314,6 +314,17 @@ mod tests {
       vec![
         ("love".to_string(), "noun".to_string(), "Liebe {f}".to_string()),
         ("love".to_string(), "unknown".to_string(), "null [beim Tennis]".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_christmas() {
+    let found = collect_translations(&"christmas");
+    assert_eq!(
+      found,
+      vec![
+        ("Christmas".to_string(), "noun".to_string(), "Weihnachten {n}".to_string()),
       ]
     );
   }
