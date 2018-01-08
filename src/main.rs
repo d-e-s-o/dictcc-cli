@@ -80,6 +80,28 @@ fn normalize(string: &str) -> String {
   s
 }
 
+fn handle<F>(mut cursor: sqlite::Cursor, callback: &mut F) -> Result<()>
+where
+  F: FnMut(&str, &str, &str) -> Result<()>,
+{
+  while let Some(row) = cursor.next()? {
+    let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
+      "Invalid first column in result: {:?}",
+      row
+    )))?;
+    let german = row[1].as_string().ok_or_else(|| Error::Error(format!(
+      "Invalid second column in result: {:?}",
+      row
+    )))?;
+    let type_ = row[2].as_string().ok_or_else(|| Error::Error(format!(
+      "Invalid third column in result: {:?}",
+      row
+    )))?;
+    callback(&normalize(english), &normalize(german), type_)?;
+  }
+  Ok(())
+}
+
 fn open(db: &path::Path) -> Result<sqlite::Connection> {
   // Note that sqlite::open by default creates the database if it does
   // not exist. That is not a desired behavior. So we catch cases where
@@ -179,22 +201,7 @@ where
   ]
    .concat())?;
 
-  while let Some(row) = cursor.next()? {
-    let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
-      "Invalid first column in result: {:?}",
-      row
-    )))?;
-    let german = row[1].as_string().ok_or_else(|| Error::Error(format!(
-      "Invalid second column in result: {:?}",
-      row
-    )))?;
-    let type_ = row[2].as_string().ok_or_else(|| Error::Error(format!(
-      "Invalid third column in result: {:?}",
-      row
-    )))?;
-    callback(&normalize(english), &normalize(german), type_)?;
-  }
-  Ok(())
+  handle(cursor, &mut callback)
 }
 
 fn run() -> i32 {
