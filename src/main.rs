@@ -109,7 +109,10 @@ where
   // strings.
   // Note also that the database contains some elements with strings
   // containing multiple white spaces in succession. As of now we only
-  // support two spaces and will merge them into a single one.
+  // support two spaces and will merge them into a single one. Do note
+  // though that the entire (current) data set was checked and it was
+  // found that only square braces ever appear with two spaces in front
+  // of them.
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
   // particular type sorted by the number of uses before moving on to
@@ -124,6 +127,34 @@ where
      WHERE {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
            ({eng} LIKE ? AND __type__='verb') OR \
            ({eng} LIKE ? AND __type__='verb') \
      ORDER BY __type__ ASC, \
@@ -134,23 +165,19 @@ where
   );
 
   let mut cursor = connection.prepare(query)?.cursor();
-  cursor.bind(
-    &[
-      sqlite::Value::String(to_translate.to_string()),
+  cursor.bind(&[
+    vec![sqlite::Value::String(to_translate.to_string())],
+    include!("permutations.in"),
+    vec![
       sqlite::Value::String(
-        to_translate.to_string() + " [%]",
+        "to ".to_string() + to_translate
       ),
       sqlite::Value::String(
-        to_translate.to_string() + "  [%]",
-      ),
-      sqlite::Value::String(
-        "to ".to_string() + to_translate,
-      ),
-      sqlite::Value::String(
-        "to ".to_string() + to_translate + " %",
+        "to ".to_string() + to_translate + " %"
       ),
     ],
-  )?;
+  ]
+   .concat())?;
 
   while let Some(row) = cursor.next()? {
     let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
@@ -325,6 +352,57 @@ mod tests {
       found,
       vec![
         ("Christmas".to_string(), "noun".to_string(), "Weihnachten {n}".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_wherewithals() {
+    let found = collect_translations(&"wherewithals");
+    assert_eq!(
+      found,
+      vec![
+        ("wherewithals {pl}".to_string(), "noun".to_string(), "Nötiges {n}".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_statistics() {
+    let found = collect_translations(&"statistics");
+    assert_eq!(
+      found,
+      vec![
+        (
+          "statistics {pl} [science that collects and interprets numerical data] [treated as sg.] \
+           <stats>"
+          .to_string(),
+          "noun".to_string(),
+          "Statistik {f}".to_string()
+        ),
+        ("statistics".to_string(), "noun".to_string(), "Statistiken {pl}".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_contents() {
+    let found = collect_translations(&"contents");
+    assert_eq!(
+      found,
+      vec![
+        ("contents {pl} <cont.>".to_string(), "noun".to_string(), "Inhalt {m} <Inh.>".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_sulfur() {
+    let found = collect_translations(&"sulfur");
+    assert_eq!(
+      found,
+      vec![
+        ("sulfur <S> [Am.]".to_string(), "noun".to_string(), "Schwefel {m} <S>".to_string()),
       ]
     );
   }
