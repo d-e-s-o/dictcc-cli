@@ -114,9 +114,6 @@ where
   // is that we first want to print all the translations for a
   // particular type sorted by the number of uses before moving on to
   // the next type.
-  // TODO: We need to escape our input before passing it to SQL or use a
-  //       prepared statement or something of this sort to mitigate SQL
-  //       injection problems.
   let query = format!(
     "SELECT {eng},{ger}, \
        CASE {typ} WHEN '' \
@@ -124,19 +121,36 @@ where
          ELSE entry_type \
        END AS __type__ \
      FROM {tbl} \
-     WHERE {eng}='{trans}' OR \
-           {eng} LIKE '{trans} [%]' OR \
-           {eng} LIKE '{trans}  [%]' OR \
-           ({eng} LIKE 'to {trans}' AND __type__='verb') OR \
-           ({eng} LIKE 'to {trans} %' AND __type__='verb') \
+     WHERE {eng}=? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           ({eng} LIKE ? AND __type__='verb') OR \
+           ({eng} LIKE ? AND __type__='verb') \
      ORDER BY __type__ ASC, \
               {use} DESC, \
               {eng} ASC;",
     ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
-    trans = to_translate, use = USAGE_COL,
+    use = USAGE_COL,
   );
 
   let mut cursor = connection.prepare(query)?.cursor();
+  cursor.bind(
+    &[
+      sqlite::Value::String(to_translate.to_string()),
+      sqlite::Value::String(
+        to_translate.to_string() + " [%]",
+      ),
+      sqlite::Value::String(
+        to_translate.to_string() + "  [%]",
+      ),
+      sqlite::Value::String(
+        "to ".to_string() + to_translate,
+      ),
+      sqlite::Value::String(
+        "to ".to_string() + to_translate + " %",
+      ),
+    ],
+  )?;
 
   while let Some(row) = cursor.next()? {
     let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
@@ -226,6 +240,16 @@ mod tests {
       translate(db, to_translate, callback).unwrap();
     }
     found
+  }
+
+  #[test]
+  fn inject_malicious_sql() {
+    // By injecting a condition that is always true we would effectively
+    // dump the entire table's contents, if the code were prone to SQL
+    // injection.
+    let code = format!("' OR 1=1 OR {eng}='", eng = ENGLISH_COL);
+    let found = collect_translations(&code);
+    assert_eq!(found, vec![]);
   }
 
   #[test]
