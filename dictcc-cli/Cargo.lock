@@ -3,7 +3,7 @@ name = "dictcc-cli"
 version = "0.1.0"
 dependencies = [
  "gcc 0.3.54",
- "libc 0.2.34",
+ "libc 0.2.35",
  "pkg-config 0.3.9",
  "sqlite 0.23.9",
  "sqlite3-src 0.2.7",
@@ -22,13 +22,13 @@ replace = "gcc 0.3.54"
 
 [[package]]
 name = "libc"
-version = "0.2.34"
+version = "0.2.35"
 
 [[package]]
 name = "libc"
-version = "0.2.34"
+version = "0.2.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-replace = "libc 0.2.34"
+replace = "libc 0.2.35"
 
 [[package]]
 name = "pkg-config"
@@ -44,7 +44,7 @@ replace = "pkg-config 0.3.9"
 name = "sqlite"
 version = "0.23.9"
 dependencies = [
- "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlite3-sys 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -66,7 +66,7 @@ replace = "sqlite3-src 0.2.7"
 name = "sqlite3-sys"
 version = "0.12.0"
 dependencies = [
- "libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "sqlite3-src 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -78,7 +78,7 @@ replace = "sqlite3-sys 0.12.0"
 
 [metadata]
 "checksum gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)" = "5e33ec290da0d127825013597dbdfc28bee4964690c7ce1166cbc2a7bd08b1bb"
-"checksum libc 0.2.34 (registry+https://github.com/rust-lang/crates.io-index)" = "36fbc8a8929c632868295d0178dd8f63fc423fd7537ad0738372bd010b3ac9b0"
+"checksum libc 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)" = "96264e9b293e95d25bfcbbf8a88ffd1aedc85b754eba8b7d78012f638ba220eb"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
 "checksum sqlite3-src 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)" = "967684cb9bbfad8e76d8805c634affda15e51350922fbfad62f06ca4db93c4c6"
 "checksum sqlite3-sys 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "71fec807a1534bd13eeaaec396175d67c79bdc68df55e18a452726ec62a8fb08"

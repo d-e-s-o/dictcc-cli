@@ -17,7 +17,7 @@ version = "0.3.54"
 path = "../gcc"
 
 [dependencies.libc]
-version = "0.2.34"
+version = "0.2.35"
 path = "../libc"
 
 [dependencies.pkg-config]
@@ -38,7 +38,7 @@ path = "../sqlite3-sys"
 
 [replace]
 "gcc:0.3.54" = { path = "../gcc" }
-"libc:0.2.34" = { path = "../libc" }
+"libc:0.2.35" = { path = "../libc" }
 "pkg-config:0.3.9" = { path = "../pkg-config" }
 "sqlite:0.23.9" = { path = "../sqlite" }
 "sqlite3-src:0.2.7" = { path = "../sqlite3-src" }
