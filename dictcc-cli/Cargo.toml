@@ -12,9 +12,9 @@ A command line application for translating between languages using dict.cc's dat
 """
 build = "build.rs"
 
-[dependencies.gcc]
-version = "0.3.54"
-path = "../gcc"
+[dependencies.cc]
+version = "1.0.4"
+path = "../cc"
 
 [dependencies.libc]
 version = "0.2.35"
@@ -29,7 +29,7 @@ version = "0.23.9"
 path = "../sqlite"
 
 [dependencies.sqlite3-src]
-version = "0.2.7"
+version = "0.2.9"
 path = "../sqlite3-src"
 
 [dependencies.sqlite3-sys]
@@ -37,9 +37,9 @@ version = "0.12.0"
 path = "../sqlite3-sys"
 
 [replace]
-"gcc:0.3.54" = { path = "../gcc" }
+"cc:1.0.4" = { path = "../cc" }
 "libc:0.2.35" = { path = "../libc" }
 "pkg-config:0.3.9" = { path = "../pkg-config" }
 "sqlite:0.23.9" = { path = "../sqlite" }
-"sqlite3-src:0.2.7" = { path = "../sqlite3-src" }
+"sqlite3-src:0.2.9" = { path = "../sqlite3-src" }
 "sqlite3-sys:0.12.0" = { path = "../sqlite3-sys" }

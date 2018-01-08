@@ -2,23 +2,23 @@
 name = "dictcc-cli"
 version = "0.1.0"
 dependencies = [
- "gcc 0.3.54",
+ "cc 1.0.4",
  "libc 0.2.35",
  "pkg-config 0.3.9",
  "sqlite 0.23.9",
- "sqlite3-src 0.2.7",
+ "sqlite3-src 0.2.9",
  "sqlite3-sys 0.12.0",
 ]
 
 [[package]]
-name = "gcc"
-version = "0.3.54"
+name = "cc"
+version = "1.0.4"
 
 [[package]]
-name = "gcc"
-version = "0.3.54"
+name = "cc"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-replace = "gcc 0.3.54"
+replace = "cc 1.0.4"
 
 [[package]]
 name = "libc"
@@ -50,24 +50,24 @@ dependencies = [
 
 [[package]]
 name = "sqlite3-src"
-version = "0.2.7"
+version = "0.2.9"
 dependencies = [
- "gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cc 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "sqlite3-src"
-version = "0.2.7"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-replace = "sqlite3-src 0.2.7"
+replace = "sqlite3-src 0.2.9"
 
 [[package]]
 name = "sqlite3-sys"
 version = "0.12.0"
 dependencies = [
  "libc 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlite3-src 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sqlite3-src 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -77,8 +77,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 replace = "sqlite3-sys 0.12.0"
 
 [metadata]
-"checksum gcc 0.3.54 (registry+https://github.com/rust-lang/crates.io-index)" = "5e33ec290da0d127825013597dbdfc28bee4964690c7ce1166cbc2a7bd08b1bb"
+"checksum cc 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "deaf9ec656256bb25b404c51ef50097207b9cbb29c933d31f92cae5a8a0ffee0"
 "checksum libc 0.2.35 (registry+https://github.com/rust-lang/crates.io-index)" = "96264e9b293e95d25bfcbbf8a88ffd1aedc85b754eba8b7d78012f638ba220eb"
 "checksum pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "3a8b4c6b8165cd1a1cd4b9b120978131389f64bdaf456435caa41e630edba903"
-"checksum sqlite3-src 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)" = "967684cb9bbfad8e76d8805c634affda15e51350922fbfad62f06ca4db93c4c6"
+"checksum sqlite3-src 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)" = "46e0bc115b563b1ee6c665ef895b56bf488522f57d1c6571887547c57c8f5a88"
 "checksum sqlite3-sys 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "71fec807a1534bd13eeaaec396175d67c79bdc68df55e18a452726ec62a8fb08"
