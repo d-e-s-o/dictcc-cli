@@ -31,6 +31,7 @@ DELETE FROM main_ft WHERE NOT (
   term2 LIKE "%statistics%" OR
   term2 LIKE "sulfur <%> [%]" OR
   term2 LIKE "surefire [%]" OR
+  term2 LIKE "the poor %" OR
   term2 LIKE "wherewithals {%}" OR
   (term2 LIKE 'to subjugate' AND entry_type='verb') OR \
   (term2 LIKE 'to subjugate %' AND entry_type='verb')

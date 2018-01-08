@@ -129,24 +129,25 @@ where
   // type column and if we perform the replacement afterwards we mess up
   // the order because the empty string '' is sorted before all other
   // strings.
-  // Note also that the database contains some elements with strings
+  let select = format!(
+    "SELECT {eng},{ger}, \
+       CASE {typ} WHEN '' \
+         THEN 'unknown' \
+         ELSE entry_type \
+       END AS __type__, \
+       {use} \
+     FROM {tbl}",
+    eng = ENGLISH_COL, ger = GERMAN_COL,
+    typ = TYPE_COL, tbl = SEARCH_TBL, use = USAGE_COL,
+  );
+  // Note that the database contains some elements with strings
   // containing multiple white spaces in succession. As of now we only
   // support two spaces and will merge them into a single one. Do note
   // though that the entire (current) data set was checked and it was
   // found that only square braces ever appear with two spaces in front
   // of them.
-  // We order by type first and then by the number of uses. The reason
-  // is that we first want to print all the translations for a
-  // particular type sorted by the number of uses before moving on to
-  // the next type.
-  let query = format!(
-    "SELECT {eng},{ger}, \
-       CASE {typ} WHEN '' \
-         THEN 'unknown' \
-         ELSE entry_type \
-       END AS __type__ \
-     FROM {tbl} \
-     WHERE {eng} LIKE ? OR \
+  let where1 = format!(
+    "WHERE {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            {eng} LIKE ? OR \
@@ -178,12 +179,33 @@ where
            {eng} LIKE ? OR \
            {eng} LIKE ? OR \
            ({eng} LIKE ? AND __type__='verb') OR \
-           ({eng} LIKE ? AND __type__='verb') \
-     ORDER BY __type__ ASC, \
-              {use} DESC, \
-              {eng} ASC;",
-    ger = GERMAN_COL, typ = TYPE_COL, tbl = SEARCH_TBL, eng = ENGLISH_COL,
-    use = USAGE_COL,
+           ({eng} LIKE ? AND __type__='verb')",
+    eng = ENGLISH_COL,
+  );
+  let where2 = format!(
+    "WHERE {eng} LIKE ? OR \
+           {eng} LIKE ? OR \
+           {eng} LIKE ?",
+    eng = ENGLISH_COL,
+  );
+  // We order by type first and then by the number of uses. The reason
+  // is that we first want to print all the translations for a
+  // particular type sorted by the number of uses before moving on to
+  // the next type.
+  let order = format!(
+    "ORDER BY __type__ ASC, \
+             {use} DESC, \
+             {eng} ASC",
+    eng = ENGLISH_COL, use = USAGE_COL,
+  );
+
+  let query =
+    format!(
+    "{select} {where1} \
+     UNION \
+     {select} {where2} \
+     {order}",
+    select = select, where1 = where1, where2 = where2, order = order,
   );
 
   let mut cursor = connection.prepare(query)?.cursor();
@@ -197,6 +219,15 @@ where
       sqlite::Value::String(
         "to ".to_string() + to_translate + " %"
       ),
+      sqlite::Value::String(
+        to_translate.to_string() + " %"
+      ),
+      sqlite::Value::String(
+        "% ".to_string() + to_translate
+      ),
+      sqlite::Value::String(
+        "% ".to_string() + to_translate + " %"
+      ),
     ],
   ]
    .concat())?;
@@ -207,7 +238,7 @@ where
 fn run() -> i32 {
   let argv: Vec<String> = env::args().collect();
   if argv.len() != 2 {
-    eprintln!("Usage: {} [<word>]", argv[0]);
+    eprintln!("Usage: {} [<word>...]", argv[0]);
     return 1;
   }
 
@@ -410,6 +441,21 @@ mod tests {
       found,
       vec![
         ("sulfur <S> [Am.]".to_string(), "noun".to_string(), "Schwefel {m} <S>".to_string()),
+      ]
+    );
+  }
+
+  #[test]
+  fn translate_poor() {
+    let found = collect_translations(&"poor");
+    assert_eq!(
+      found,
+      vec![
+        (
+          "the poor {pl}".to_string(),
+          "noun".to_string(),
+          "Arme {pl} [arme Leute als Klasse]".to_string()
+        ),
       ]
     );
   }
