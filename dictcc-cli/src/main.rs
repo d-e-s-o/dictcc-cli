@@ -237,17 +237,20 @@ where
 
 fn run() -> i32 {
   let argv: Vec<String> = env::args().collect();
-  if argv.len() != 2 {
-    eprintln!("Usage: {} <word>", argv[0]);
+  if argv.len() < 3 {
+    eprintln!("Usage: {} <database> <word>", argv[0]);
     return 1;
   }
 
-  let db = path::Path::new("./data/dictcc-lp1.db");
+  let db = path::Path::new(&argv[1]);
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
   };
-  match translate(db, &argv[1], callback) {
+
+  // We treat all arguments past the database path itself as words to
+  // search for (in that order, with a single space in between them).
+  match translate(db, &argv[2..].join(" "), callback) {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);
