@@ -66,6 +66,13 @@ impl fmt::Display for Error {
 
 type Result<T> = result::Result<T, Error>;
 
+enum Direction {
+  // Map from term1 (in language 1) to term2 (in language 2).
+  Lang1ToLang2,
+  // Map from term2 (in language 2) to term1 (in language 1).
+  Lang2ToLang1,
+}
+
 // CREATE VIRTUAL TABLE "main_ft" using
 //   fts3("id" INTEGER PRIMARY KEY NOT NULL,
 //        "term1" VARCHAR,
@@ -127,10 +134,15 @@ fn open(db: &path::Path) -> Result<sqlite::Connection> {
   }
 }
 
-fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
+fn translate<F>(db: &path::Path, to_translate: &str,
+                direction: &Direction, mut callback: F) -> Result<()>
 where
   F: FnMut(&str, &str, &str) -> Result<()>,
 {
+  let (src_col, dst_col) = match *direction {
+    Direction::Lang1ToLang2 => (TERM1_COL, TERM2_COL),
+    Direction::Lang2ToLang1 => (TERM2_COL, TERM1_COL),
+  };
   let connection = open(db)?;
   // Note that for some reason some terms in the database do not have a
   // proper type associated with them. We make this fact a little more
@@ -147,7 +159,7 @@ where
        END AS __type__, \
        {use} \
      FROM {tbl}",
-    src = TERM2_COL, dst = TERM1_COL,
+    src = src_col, dst = dst_col,
     typ = TYPE_COL, tbl = SEARCH_TBL, use = USAGE_COL,
   );
   // Note that the database contains some elements with strings
@@ -190,13 +202,13 @@ where
            {src} LIKE ? OR \
            ({src} LIKE ? AND __type__='verb') OR \
            ({src} LIKE ? AND __type__='verb')",
-    src = TERM2_COL,
+    src = src_col,
   );
   let where2 = format!(
     "WHERE {src} LIKE ? OR \
            {src} LIKE ? OR \
            {src} LIKE ?",
-    src = TERM2_COL,
+    src = src_col,
   );
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
@@ -206,7 +218,7 @@ where
     "ORDER BY __type__ ASC, \
              {use} DESC, \
              {src} ASC",
-    src = TERM2_COL, use = USAGE_COL,
+    src = src_col, use = USAGE_COL,
   );
 
   let query =
@@ -274,7 +286,7 @@ fn run_() -> Result<()> {
     Ok(())
   };
 
-  translate(db, &term, callback)
+  translate(db, &term, &Direction::Lang2ToLang1, callback)
 }
 
 fn run() -> i32 {
@@ -295,6 +307,13 @@ fn main() {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
+  where
+    F: FnMut(&str, &str, &str) -> Result<()>,
+  {
+    super::translate(db, to_translate, &Direction::Lang2ToLang1, callback)
+  }
 
   #[test]
   fn fail_db_not_found() {
@@ -489,5 +508,23 @@ mod tests {
         ),
       ]
     );
+  }
+
+  #[test]
+  fn translate_inhalt() {
+    let mut found = false;
+    let db = path::Path::new("./test/test.db");
+    {
+      let callback = |src_lang: &str, dst_lang: &str, type_: &str| {
+        assert_eq!(src_lang, "Inhalt {m} <Inh.>");
+        assert_eq!(dst_lang, "contents {pl} <cont.>");
+        assert_eq!(type_, "noun");
+        found = true;
+        Ok(())
+      };
+
+      super::translate(db, "inhalt", &Direction::Lang1ToLang2, callback).unwrap();
+    }
+    assert!(found);
   }
 }

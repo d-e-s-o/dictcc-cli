@@ -1,5 +1,6 @@
 Unreleased
 ----------
+- Added support for bidirectional translations
 - Use `getopts` crate for argument parsing
 
 
