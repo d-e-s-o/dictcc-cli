@@ -18,6 +18,9 @@ lto = true
 codegen-units = 1
 incremental = false
 
+[dependencies.clap]
+version = "2"
+
 [dependencies.cc]
 version = "1.0.4"
 path = "../cc"

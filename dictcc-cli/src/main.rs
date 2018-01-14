@@ -22,6 +22,7 @@
 //! dictcc-cli is a command line interface to translating between
 //! languages by means of the offline data from dict.cc.
 
+extern crate clap;
 extern crate sqlite;
 
 use std::env;
@@ -236,13 +237,32 @@ where
 }
 
 fn run() -> i32 {
+  let matches = clap::App::new("dictcc-cli")
+    .version("1.0")
+    .author("Daniel Mueller <deso@posteo.net>")
+    .about("A command line application for translating between languages using dict.cc's database.")
+    .arg(
+      clap::Arg::with_name("database")
+        .short("d")
+        .long("database")
+        .value_name("FILE")
+        .help("Set the database file to use")
+        .takes_value(true),
+    )
+    .get_matches();
+
+  // Gets a value for config if supplied by user, or defaults to "default.conf"
+  let config = matches.value_of("config").unwrap_or("default.conf");
+  println!("Value for config: {}", config);
+
   let argv: Vec<String> = env::args().collect();
   if argv.len() < 3 {
     eprintln!("Usage: {} <database> <word>", argv[0]);
     return 1;
   }
 
-  let db = path::Path::new(&argv[1]);
+  let db = matches.value_of("database").unwrap();
+  let db = path::Path::new(&db);
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
