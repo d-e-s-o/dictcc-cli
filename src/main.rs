@@ -235,11 +235,10 @@ where
   handle(cursor, &mut callback)
 }
 
-fn run() -> i32 {
+fn run_() -> Result<()> {
   let argv: Vec<String> = env::args().collect();
   if argv.len() < 3 {
-    eprintln!("Usage: {} [<database>] [<word>...]", argv[0]);
-    return 1;
+    return Err(Error::Error(format!("Usage: {} [<database>] [<word>...]", argv[0])));
   }
 
   let db = path::Path::new(&argv[1]);
@@ -250,7 +249,11 @@ fn run() -> i32 {
 
   // We treat all arguments past the database path itself as words to
   // search for (in that order, with a single space in between them).
-  match translate(db, &argv[2..].join(" "), callback) {
+  translate(db, &argv[2..].join(" "), callback)
+}
+
+fn run() -> i32 {
+  match run_() {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);
