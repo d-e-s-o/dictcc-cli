@@ -12,5 +12,8 @@ A command line application for translating between languages using dict.cc's dat
 """
 build = "build.rs"
 
+[dependencies.getopts]
+version = "0.2.15"
+
 [dependencies.sqlite]
 version = "0.23.9"

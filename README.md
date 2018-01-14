@@ -1,6 +1,7 @@
 dictcc-cli
 ==========
 
+- [Changelog](CHANGELOG.md)
 
 Purpose
 -------

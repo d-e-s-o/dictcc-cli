@@ -22,6 +22,7 @@
 //! dictcc-cli is a command line interface to translating between
 //! languages by means of the offline data from dict.cc.
 
+extern crate getopts;
 extern crate sqlite;
 
 use std::env;
@@ -33,10 +34,18 @@ use std::result;
 #[derive(Debug)]
 /// Internally used error comprising the various different error types.
 pub enum Error {
+  /// `getopts` reported an argument-parsing related error.
+  GetoptsFail(getopts::Fail),
   /// An Sqlite error reported by the sqlite crate.
   SqlError(sqlite::Error),
   /// A custom error in the form of a string.
   Error(String),
+}
+
+impl From<getopts::Fail> for Error {
+  fn from(e: getopts::Fail) -> Error {
+    Error::GetoptsFail(e)
+  }
 }
 
 impl From<sqlite::Error> for Error {
@@ -48,8 +57,9 @@ impl From<sqlite::Error> for Error {
 impl fmt::Display for Error {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match *self {
-      Error::SqlError(ref e) => write!(f, "SQL error: {}", e),
-      Error::Error(ref e) => write!(f, "{}", e),
+      Error::GetoptsFail(ref e) => return write!(f, "Argument error: {}", e),
+      Error::SqlError(ref e) => return write!(f, "SQL error: {}", e),
+      Error::Error(ref e) => return write!(f, "{}", e),
     }
   }
 }
@@ -235,21 +245,36 @@ where
   handle(cursor, &mut callback)
 }
 
-fn run_() -> Result<()> {
-  let argv: Vec<String> = env::args().collect();
-  if argv.len() < 3 {
-    return Err(Error::Error(format!("Usage: {} [<database>] [<word>...]", argv[0])));
-  }
+fn usage(opts: &getopts::Options) -> String {
+  let program = env::args().nth(0).unwrap_or_else(|| "dictcc-cli".to_string());
+  let usage = format!("Usage: {} [options] [<database>] [<word>...]", program);
+  opts.usage(&usage)
+}
 
-  let db = path::Path::new(&argv[1]);
+/// Parse the program's arguments and return a (database, term) tuple.
+fn parse_arguments() -> Result<(String, String)> {
+  let argv: Vec<String> = env::args().collect();
+  let mut opts = getopts::Options::new();
+  opts.optflag("h", "help", "Print the program's help");
+
+  let matches = opts.parse(&argv[1..])?;
+  if matches.free.len() < 2 {
+    return Err(Error::Error(usage(&opts)));
+  }
+  // We treat all arguments past the database path itself as words to
+  // search for (in that order, with a single space in between them).
+  Ok((matches.free[0].clone(), matches.free[1..].join(" ")))
+}
+
+fn run_() -> Result<()> {
+  let (database, term) = parse_arguments()?;
+  let db = path::Path::new(&database);
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
   };
 
-  // We treat all arguments past the database path itself as words to
-  // search for (in that order, with a single space in between them).
-  translate(db, &argv[2..].join(" "), callback)
+  translate(db, &term, callback)
 }
 
 fn run() -> i32 {
