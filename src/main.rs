@@ -76,8 +76,8 @@ type Result<T> = result::Result<T, Error>;
 //        "entry_type" VARCHAR,
 //        "vt_usage" INTEGER);
 const SEARCH_TBL: &str = "main_ft";
-const GERMAN_COL: &str = "term1";
-const ENGLISH_COL: &str = "term2";
+const TERM1_COL: &str = "term1";
+const TERM2_COL: &str = "term2";
 const TYPE_COL: &str = "entry_type";
 const USAGE_COL: &str = "vt_usage";
 
@@ -95,11 +95,11 @@ where
   F: FnMut(&str, &str, &str) -> Result<()>,
 {
   while let Some(row) = cursor.next()? {
-    let english = row[0].as_string().ok_or_else(|| Error::Error(format!(
+    let src_term = row[0].as_string().ok_or_else(|| Error::Error(format!(
       "Invalid first column in result: {:?}",
       row
     )))?;
-    let german = row[1].as_string().ok_or_else(|| Error::Error(format!(
+    let dst_term = row[1].as_string().ok_or_else(|| Error::Error(format!(
       "Invalid second column in result: {:?}",
       row
     )))?;
@@ -107,7 +107,7 @@ where
       "Invalid third column in result: {:?}",
       row
     )))?;
-    callback(&normalize(english), &normalize(german), type_)?;
+    callback(&normalize(src_term), &normalize(dst_term), type_)?;
   }
   Ok(())
 }
@@ -140,14 +140,14 @@ where
   // the order because the empty string '' is sorted before all other
   // strings.
   let select = format!(
-    "SELECT {eng},{ger}, \
+    "SELECT {src},{dst}, \
        CASE {typ} WHEN '' \
          THEN 'unknown' \
          ELSE entry_type \
        END AS __type__, \
        {use} \
      FROM {tbl}",
-    eng = ENGLISH_COL, ger = GERMAN_COL,
+    src = TERM2_COL, dst = TERM1_COL,
     typ = TYPE_COL, tbl = SEARCH_TBL, use = USAGE_COL,
   );
   // Note that the database contains some elements with strings
@@ -157,46 +157,46 @@ where
   // found that only square braces ever appear with two spaces in front
   // of them.
   let where1 = format!(
-    "WHERE {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           ({eng} LIKE ? AND __type__='verb') OR \
-           ({eng} LIKE ? AND __type__='verb')",
-    eng = ENGLISH_COL,
+    "WHERE {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           ({src} LIKE ? AND __type__='verb') OR \
+           ({src} LIKE ? AND __type__='verb')",
+    src = TERM2_COL,
   );
   let where2 = format!(
-    "WHERE {eng} LIKE ? OR \
-           {eng} LIKE ? OR \
-           {eng} LIKE ?",
-    eng = ENGLISH_COL,
+    "WHERE {src} LIKE ? OR \
+           {src} LIKE ? OR \
+           {src} LIKE ?",
+    src = TERM2_COL,
   );
   // We order by type first and then by the number of uses. The reason
   // is that we first want to print all the translations for a
@@ -205,8 +205,8 @@ where
   let order = format!(
     "ORDER BY __type__ ASC, \
              {use} DESC, \
-             {eng} ASC",
-    eng = ENGLISH_COL, use = USAGE_COL,
+             {src} ASC",
+    src = TERM2_COL, use = USAGE_COL,
   );
 
   let query =
@@ -269,8 +269,8 @@ fn parse_arguments() -> Result<(String, String)> {
 fn run_() -> Result<()> {
   let (database, term) = parse_arguments()?;
   let db = path::Path::new(&database);
-  let callback = |english: &str, german: &str, type_: &str| {
-    println!("{} ({}): {}", english, type_, german);
+  let callback = |src_term: &str, dst_term: &str, type_: &str| {
+    println!("{} ({}): {}", src_term, type_, dst_term);
     Ok(())
   };
 
@@ -328,8 +328,8 @@ mod tests {
     let mut found = Vec::new();
     let db = path::Path::new("./test/test.db");
     {
-      let callback = |english: &str, german: &str, type_: &str| {
-        found.push((english.to_string(), type_.to_string(), german.to_string()));
+      let callback = |src_term: &str, dst_term: &str, type_: &str| {
+        found.push((src_term.to_string(), type_.to_string(), dst_term.to_string()));
         Ok(())
       };
 
@@ -343,7 +343,7 @@ mod tests {
     // By injecting a condition that is always true we would effectively
     // dump the entire table's contents, if the code were prone to SQL
     // injection.
-    let code = format!("' OR 1=1 OR {eng}='", eng = ENGLISH_COL);
+    let code = format!("' OR 1=1 OR {src}='", src = TERM2_COL);
     let found = collect_translations(&code);
     assert_eq!(found, vec![]);
   }
