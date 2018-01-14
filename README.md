@@ -21,7 +21,19 @@ Being intended to be simple and fast to use, translating a term using
 **dictcc-cli** is as simple as providing it as an argument to the
 program:
 ```bash
-$ dictcc-cli dictcc-lp1.db dorky
+$ dictcc-cli dictcc-lp1.db durchgeknallt
+> durchgeknallt [ugs.] (adj): crazed
+> durchgeknallt [ugs.] (adj): cuckoo [coll.]
+> durchgeknallt [ugs.] (adj adv): loopy [coll.]
+```
+
+Note that the source an destination languages depends on the database
+being used. In the example above the German database maps from German to
+English and so this is the default direction of translation.
+
+To translate the other way, the `-r/--reverse` option can be used:
+```bash
+$ dictcc-cli dictcc-lp1.db --reverse dorky
 > dorky [coll.] (adj): bekloppt [ugs.]
 > dorky [coll.] (adj): idiotisch
 > dorky [coll.] (adj): deppert [österr.] [südd.]

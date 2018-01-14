@@ -264,29 +264,37 @@ fn usage(opts: &getopts::Options) -> String {
 }
 
 /// Parse the program's arguments and return a (database, term) tuple.
-fn parse_arguments() -> Result<(String, String)> {
+fn parse_arguments() -> Result<(String, String, Direction)> {
   let argv: Vec<String> = env::args().collect();
   let mut opts = getopts::Options::new();
+  opts.optflag("r", "reverse", "Perform reverse lookup, i.e., instead \
+                                from mapping from lang1 to lang2 map \
+                                from lang2 to lang1");
   opts.optflag("h", "help", "Print the program's help");
 
   let matches = opts.parse(&argv[1..])?;
   if matches.free.len() < 2 {
     return Err(Error::Error(usage(&opts)));
   }
+  let direction = if matches.opt_present("r") {
+    Direction::Lang2ToLang1
+  } else {
+    Direction::Lang1ToLang2
+  };
   // We treat all arguments past the database path itself as words to
   // search for (in that order, with a single space in between them).
-  Ok((matches.free[0].clone(), matches.free[1..].join(" ")))
+  Ok((matches.free[0].clone(), matches.free[1..].join(" "), direction))
 }
 
 fn run_() -> Result<()> {
-  let (database, term) = parse_arguments()?;
+  let (database, term, direction) = parse_arguments()?;
   let db = path::Path::new(&database);
   let callback = |src_term: &str, dst_term: &str, type_: &str| {
     println!("{} ({}): {}", src_term, type_, dst_term);
     Ok(())
   };
 
-  translate(db, &term, &Direction::Lang2ToLang1, callback)
+  translate(db, &term, &direction, callback)
 }
 
 fn run() -> i32 {
