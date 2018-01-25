@@ -316,13 +316,6 @@ fn main() {
 mod tests {
   use super::*;
 
-  fn translate<F>(db: &path::Path, to_translate: &str, mut callback: F) -> Result<()>
-  where
-    F: FnMut(&str, &str, &str) -> Result<()>,
-  {
-    super::translate(db, to_translate, &Direction::Lang2ToLang1, callback)
-  }
-
   #[test]
   fn fail_db_not_found() {
     let db = path::Path::new("./test/does_not_exist.db");
@@ -331,7 +324,7 @@ mod tests {
       Err(Error::Error("unreachable".to_string()))
     };
 
-    let err = translate(db, &"", callback).unwrap_err();
+    let err = translate(db, &"", &Direction::Lang2ToLang1, callback).unwrap_err();
     match err {
       Error::Error(x) => assert_eq!(x, "Database ./test/does_not_exist.db not found"),
       _ => panic!("Unexpected error: {}", err),
@@ -348,10 +341,12 @@ mod tests {
 
     // We attempt translation of a word that has no translations. We
     // expect no errors.
-    translate(db, &"awordthatdoesnotexist", callback).unwrap();
+    translate(db, &"awordthatdoesnotexist", &Direction::Lang2ToLang1, callback).unwrap();
   }
 
-  fn collect_translations(to_translate: &str) -> Vec<(String, String, String)> {
+  fn collect_translations_dir(to_translate: &str,
+                              direction: &Direction)
+                              -> Vec<(String, String, String)> {
     let mut found = Vec::new();
     let db = path::Path::new("./test/test.db");
     {
@@ -360,9 +355,13 @@ mod tests {
         Ok(())
       };
 
-      translate(db, to_translate, callback).unwrap();
+      translate(db, to_translate, direction, callback).unwrap();
     }
     found
+  }
+
+  fn collect_translations(to_translate: &str) -> Vec<(String, String, String)> {
+    collect_translations_dir(to_translate, &Direction::Lang2ToLang1)
   }
 
   #[test]
@@ -520,19 +519,28 @@ mod tests {
 
   #[test]
   fn translate_inhalt() {
-    let mut found = false;
-    let db = path::Path::new("./test/test.db");
-    {
-      let callback = |src_lang: &str, dst_lang: &str, type_: &str| {
-        assert_eq!(src_lang, "Inhalt {m} <Inh.>");
-        assert_eq!(dst_lang, "contents {pl} <cont.>");
-        assert_eq!(type_, "noun");
-        found = true;
-        Ok(())
-      };
+    let found = collect_translations_dir(&"inhalt", &Direction::Lang1ToLang2);
+    assert_eq!(
+      found,
+      vec![
+        ("Inhalt {m} <Inh.>".to_string(), "noun".to_string(), "contents {pl} <cont.>".to_string()),
+      ]
+    );
+  }
 
-      super::translate(db, "inhalt", &Direction::Lang1ToLang2, callback).unwrap();
-    }
-    assert!(found);
+  #[test]
+  fn translate_aerger() {
+    // Note that a failure of this test case may be caused by a sqlite
+    // library without ICU support being used. Such a library does not
+    // treat Unicode characters in a case-insensitive manner, causing
+    // fewer matches to be found.
+    let found = collect_translations_dir(&"Ärger", &Direction::Lang1ToLang2);
+    assert_eq!(
+      found,
+      vec![
+        ("ärger".to_string(), "adj adv".to_string(), "worse".to_string()),
+        ("Ärger {m}".to_string(), "noun".to_string(), "anger".to_string()),
+      ]
+    );
   }
 }

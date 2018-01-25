@@ -21,6 +21,7 @@
 cp dictcc-lp1.db test.db
 sqlite3 test.db < <(cat <<EOF
 DELETE FROM main_ft WHERE NOT (
+  term2 LIKE "anger" OR
   term2 LIKE "christmas" OR
   term2 LIKE "contents {%} <%>" OR
   term2 LIKE "dorky [%]" OR
@@ -32,6 +33,7 @@ DELETE FROM main_ft WHERE NOT (
   term2 LIKE "sulfur <%> [%]" OR
   term2 LIKE "surefire [%]" OR
   term2 LIKE "the poor %" OR
+  term2 LIKE "worse" OR
   term2 LIKE "wherewithals {%}" OR
   (term2 LIKE 'to subjugate' AND entry_type='verb') OR \
   (term2 LIKE 'to subjugate %' AND entry_type='verb')
