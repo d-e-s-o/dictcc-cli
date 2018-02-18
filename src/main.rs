@@ -25,6 +25,7 @@
 extern crate getopts;
 extern crate sqlite;
 
+use std::borrow;
 use std::env;
 use std::fmt;
 use std::path;
@@ -89,12 +90,19 @@ const TYPE_COL: &str = "entry_type";
 const USAGE_COL: &str = "vt_usage";
 
 
-fn normalize(string: &str) -> String {
-  let mut s = string.to_string();
-  while s.contains("  ") {
-    s = s.replace("  ", " ");
+fn normalize(string: &str) -> borrow::Cow<str> {
+  if string.contains("  ") {
+    let mut s = string.to_string();
+    loop {
+      s = s.replace("  ", " ");
+      if !s.contains("  ") {
+        break;
+      }
+    }
+    s.into()
+  } else {
+    string.into()
   }
-  s
 }
 
 fn handle<F>(mut cursor: sqlite::Cursor, callback: &mut F) -> Result<()>
@@ -134,10 +142,11 @@ fn open(db: &path::Path) -> Result<sqlite::Connection> {
   }
 }
 
-fn translate<F>(db: &path::Path, to_translate: &str,
-                direction: &Direction, mut callback: F) -> Result<()>
+fn translate<F, S>(db: &path::Path, to_translate: S,
+                   direction: &Direction, mut callback: F) -> Result<()>
 where
   F: FnMut(&str, &str, &str) -> Result<()>,
+  S: Into<String>,
 {
   let (src_col, dst_col) = match *direction {
     Direction::Lang1ToLang2 => (TERM1_COL, TERM2_COL),
@@ -230,25 +239,26 @@ where
     select = select, where1 = where1, where2 = where2, order = order,
   );
 
+  let to_translate = to_translate.into();
   let mut cursor = connection.prepare(query)?.cursor();
   cursor.bind(&[
-    vec![sqlite::Value::String(to_translate.to_string())],
+    vec![sqlite::Value::String(to_translate.clone())],
     include!("permutations.in"),
     vec![
       sqlite::Value::String(
-        "to ".to_string() + to_translate
+        "to ".to_string() + &to_translate
       ),
       sqlite::Value::String(
-        "to ".to_string() + to_translate + " %"
+        "to ".to_string() + &to_translate + " %"
       ),
       sqlite::Value::String(
-        to_translate.to_string() + " %"
+        to_translate.clone() + " %"
       ),
       sqlite::Value::String(
-        "% ".to_string() + to_translate
+        "% ".to_string() + &to_translate
       ),
       sqlite::Value::String(
-        "% ".to_string() + to_translate + " %"
+        "% ".to_string() + &to_translate + " %"
       ),
     ],
   ]
@@ -294,7 +304,7 @@ fn run_() -> Result<()> {
     Ok(())
   };
 
-  translate(db, &term, &direction, callback)
+  translate(db, term, &direction, callback)
 }
 
 fn run() -> i32 {
@@ -324,7 +334,7 @@ mod tests {
       Err(Error::Error("unreachable".to_string()))
     };
 
-    let err = translate(db, &"", &Direction::Lang2ToLang1, callback).unwrap_err();
+    let err = translate(db, "", &Direction::Lang2ToLang1, callback).unwrap_err();
     match err {
       Error::Error(x) => assert_eq!(x, "Database ./test/does_not_exist.db not found"),
       _ => panic!("Unexpected error: {}", err),
@@ -341,12 +351,15 @@ mod tests {
 
     // We attempt translation of a word that has no translations. We
     // expect no errors.
-    translate(db, &"awordthatdoesnotexist", &Direction::Lang2ToLang1, callback).unwrap();
+    translate(db, "awordthatdoesnotexist", &Direction::Lang2ToLang1, callback).unwrap();
   }
 
-  fn collect_translations_dir(to_translate: &str,
-                              direction: &Direction)
-                              -> Vec<(String, String, String)> {
+  fn collect_translations_dir<S>(to_translate: S,
+                                 direction: &Direction)
+                                 -> Vec<(String, String, String)>
+  where
+    S: Into<String>,
+  {
     let mut found = Vec::new();
     let db = path::Path::new("./test/test.db");
     {
@@ -360,7 +373,10 @@ mod tests {
     found
   }
 
-  fn collect_translations(to_translate: &str) -> Vec<(String, String, String)> {
+  fn collect_translations<S>(to_translate: S) -> Vec<(String, String, String)>
+  where
+    S: Into<String>,
+  {
     collect_translations_dir(to_translate, &Direction::Lang2ToLang1)
   }
 
@@ -370,13 +386,13 @@ mod tests {
     // dump the entire table's contents, if the code were prone to SQL
     // injection.
     let code = format!("' OR 1=1 OR {src}='", src = TERM2_COL);
-    let found = collect_translations(&code);
+    let found = collect_translations(code);
     assert_eq!(found, vec![]);
   }
 
   #[test]
   fn translate_nauseating() {
-    let found = collect_translations(&"nauseating");
+    let found = collect_translations("nauseating");
     assert_eq!(
       found,
       vec![
@@ -388,7 +404,7 @@ mod tests {
 
   #[test]
   fn translate_surefire() {
-    let found = collect_translations(&"surefire");
+    let found = collect_translations("surefire");
     assert_eq!(
       found,
       vec![
@@ -399,7 +415,7 @@ mod tests {
 
   #[test]
   fn translate_dorky() {
-    let found = collect_translations(&"dorky");
+    let found = collect_translations("dorky");
     assert_eq!(
       found,
       vec![
@@ -412,7 +428,7 @@ mod tests {
 
   #[test]
   fn translate_subjugate() {
-    let found = collect_translations(&"subjugate");
+    let found = collect_translations("subjugate");
     assert_eq!(
       found,
       vec![
@@ -430,7 +446,7 @@ mod tests {
 
   #[test]
   fn translate_love() {
-    let found = collect_translations(&"love");
+    let found = collect_translations("love");
     assert_eq!(
       found,
       vec![
@@ -442,7 +458,7 @@ mod tests {
 
   #[test]
   fn translate_christmas() {
-    let found = collect_translations(&"christmas");
+    let found = collect_translations("christmas");
     assert_eq!(
       found,
       vec![
@@ -453,7 +469,7 @@ mod tests {
 
   #[test]
   fn translate_wherewithals() {
-    let found = collect_translations(&"wherewithals");
+    let found = collect_translations("wherewithals");
     assert_eq!(
       found,
       vec![
@@ -464,7 +480,7 @@ mod tests {
 
   #[test]
   fn translate_statistics() {
-    let found = collect_translations(&"statistics");
+    let found = collect_translations("statistics");
     assert_eq!(
       found,
       vec![
@@ -482,7 +498,7 @@ mod tests {
 
   #[test]
   fn translate_contents() {
-    let found = collect_translations(&"contents");
+    let found = collect_translations("contents");
     assert_eq!(
       found,
       vec![
@@ -493,7 +509,7 @@ mod tests {
 
   #[test]
   fn translate_sulfur() {
-    let found = collect_translations(&"sulfur");
+    let found = collect_translations("sulfur");
     assert_eq!(
       found,
       vec![
@@ -504,7 +520,7 @@ mod tests {
 
   #[test]
   fn translate_poor() {
-    let found = collect_translations(&"poor");
+    let found = collect_translations("poor");
     assert_eq!(
       found,
       vec![
@@ -519,7 +535,7 @@ mod tests {
 
   #[test]
   fn translate_inhalt() {
-    let found = collect_translations_dir(&"inhalt", &Direction::Lang1ToLang2);
+    let found = collect_translations_dir("inhalt", &Direction::Lang1ToLang2);
     assert_eq!(
       found,
       vec![
@@ -534,7 +550,7 @@ mod tests {
     // library without ICU support being used. Such a library does not
     // treat Unicode characters in a case-insensitive manner, causing
     // fewer matches to be found.
-    let found = collect_translations_dir(&"Ärger", &Direction::Lang1ToLang2);
+    let found = collect_translations_dir("Ärger", &Direction::Lang1ToLang2);
     assert_eq!(
       found,
       vec![

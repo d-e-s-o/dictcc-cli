@@ -1,3 +1,8 @@
+Unreleased
+----------
+- Reduce the amount of memory allocations happening
+
+
 0.2.0
 -----
 - Added support for bidirectional translations
