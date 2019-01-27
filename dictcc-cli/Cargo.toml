@@ -12,6 +12,12 @@ A command line application for translating between languages using dict.cc's dat
 """
 build = "build.rs"
 
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+incremental = false
+
 [dependencies.cc]
 version = "1.0.4"
 path = "../cc"
