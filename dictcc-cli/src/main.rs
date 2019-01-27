@@ -235,14 +235,28 @@ where
   handle(cursor, &mut callback)
 }
 
+fn print_usage(program: &str, opts: getopts::Options) {
+  let usage = format!("Usage: {} <database> <word> [options]", program);
+  print!("{}", opts.usage(&usage));
+}
+
 fn run() -> i32 {
   let argv: Vec<String> = env::args().collect();
-  if argv.len() < 3 {
-    eprintln!("Usage: {} <database> <word>", argv[0]);
-    return 1;
-  }
+  let program = argv[0].clone();
+  let mut opts = getopts::Options::new();
+  opts.optopt("d", "", "the database to use", "DATABASE");
 
-  let db = path::Path::new(&argv[1]);
+  let matches = match opts.parse(&argv[1..]) {
+      Ok(m) => { m }
+      Err(f) => { panic!(f.to_string()) }
+  };
+  let db = matches.opt_str("d").unwrap();
+  let db = path::Path::new(&db);
+  if matches.free.is_empty() {
+    print_usage(&program, opts);
+    return 1;
+  };
+
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
@@ -250,7 +264,7 @@ fn run() -> i32 {
 
   // We treat all arguments past the database path itself as words to
   // search for (in that order, with a single space in between them).
-  match translate(db, &argv[2..].join(" "), callback) {
+  match translate(&db, &matches.free.join(" "), callback) {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);

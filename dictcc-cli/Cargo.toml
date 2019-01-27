@@ -22,6 +22,9 @@ incremental = false
 version = "1.0.4"
 path = "../cc"
 
+[dependencies.getopts]
+version = "0.2"
+
 [dependencies.libc]
 version = "0.2.35"
 path = "../libc"
