@@ -24,7 +24,11 @@
 
 extern crate sqlite;
 
-use std::env;
+#[macro_use]
+extern crate structopt;
+
+use structopt::StructOpt;
+
 use std::fmt;
 use std::path;
 use std::process;
@@ -235,14 +239,20 @@ where
   handle(cursor, &mut callback)
 }
 
-fn run() -> i32 {
-  let argv: Vec<String> = env::args().collect();
-  if argv.len() < 3 {
-    eprintln!("Usage: {} <database> <word>", argv[0]);
-    return 1;
-  }
+#[derive(StructOpt, Debug)]
+#[structopt(name = "dictcc-cli")]
+struct Opt {
+    #[structopt(name = "database", parse(from_os_str))]
+    /// Set the database file to use
+    database: path::PathBuf,
 
-  let db = path::Path::new(&argv[1]);
+    #[structopt(parse(from_str))]
+    args: Vec<String>,
+}
+
+fn run() -> i32 {
+  let opt = Opt::from_args();
+  let db = path::Path::new(&opt.database);
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
@@ -250,7 +260,7 @@ fn run() -> i32 {
 
   // We treat all arguments past the database path itself as words to
   // search for (in that order, with a single space in between them).
-  match translate(db, &argv[2..].join(" "), callback) {
+  match translate(db, &opt.args[2..].join(" "), callback) {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);
