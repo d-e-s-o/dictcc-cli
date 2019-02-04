@@ -42,6 +42,9 @@ path = "../sqlite3-src"
 version = "0.12.0"
 path = "../sqlite3-sys"
 
+[dependencies.argparse]
+version = "0.2"
+
 [replace]
 "cc:1.0.4" = { path = "../cc" }
 "libc:0.2.35" = { path = "../libc" }

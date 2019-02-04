@@ -22,9 +22,9 @@
 //! dictcc-cli is a command line interface to translating between
 //! languages by means of the offline data from dict.cc.
 
+extern crate argparse;
 extern crate sqlite;
 
-use std::env;
 use std::fmt;
 use std::path;
 use std::process;
@@ -236,13 +236,16 @@ where
 }
 
 fn run() -> i32 {
-  let argv: Vec<String> = env::args().collect();
-  if argv.len() < 3 {
-    eprintln!("Usage: {} <database> <word>", argv[0]);
-    return 1;
+  let mut db = String::new();
+  {
+    let mut parser = argparse::ArgumentParser::new();
+    parser.refer(&mut db)
+        .add_option(&["--database"], argparse::Store,
+        "The database to use");
+    parser.parse_args_or_exit();
   }
 
-  let db = path::Path::new(&argv[1]);
+  let db = path::Path::new(&db);
   let callback = |english: &str, german: &str, type_: &str| {
     println!("{} ({}): {}", english, type_, german);
     Ok(())
@@ -250,7 +253,7 @@ fn run() -> i32 {
 
   // We treat all arguments past the database path itself as words to
   // search for (in that order, with a single space in between them).
-  match translate(db, &argv[2..].join(" "), callback) {
+  match translate(db, &["nothing"].join(" "), callback) {
     Ok(_) => 0,
     Err(e) => {
       eprintln!("{}", e);
