@@ -1,6 +1,9 @@
 Unreleased
 ----------
 - Reduce the amount of memory allocations happening
+- Enabled CI pipeline comprising building, testing, and linting of the
+  project
+  - Added badge indicating pipeline status
 - Updated `sqlite` dependency to `0.24`
 
 
