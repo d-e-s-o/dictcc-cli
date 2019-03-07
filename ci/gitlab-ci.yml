@@ -9,8 +9,11 @@ image: "rust:1.31.0"
 
 build-test:cargo:
   script:
+  - apt-get update
+  - apt-get install --assume-yes sqlite3
   - rustc --version && cargo --version
   - cargo build --all --verbose
+  - ldd target/debug/dictcc-cli
   - cargo test --all --verbose
 
 lint:clippy:
