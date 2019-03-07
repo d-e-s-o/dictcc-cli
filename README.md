@@ -1,4 +1,5 @@
 [![pipeline](https://gitlab.com/d-e-s-o/dictcc-cli/badges/master/pipeline.svg)](https://gitlab.com/d-e-s-o/dictcc-cli/commits/master)
+[![crates.io](https://img.shields.io/crates/v/dictcc-cli.svg)](https://crates.io/crates/dictcc-cli)
 
 dictcc-cli
 ==========
