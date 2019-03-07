@@ -1,6 +1,7 @@
 Unreleased
 ----------
 - Reduce the amount of memory allocations happening
+- Updated `sqlite` dependency to `0.24`
 
 
 0.2.0

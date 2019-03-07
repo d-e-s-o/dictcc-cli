@@ -16,4 +16,4 @@ build = "build.rs"
 version = "0.2.15"
 
 [dependencies.sqlite]
-version = "0.23.9"
+version = "0.24"
