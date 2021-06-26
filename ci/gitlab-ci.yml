@@ -12,10 +12,10 @@ build-test:cargo:
   - apt-get update
   - apt-get install --assume-yes sqlite3
   - rustc --version && cargo --version
-  - cargo build --all --verbose
-  - cargo build --all --verbose --release
+  - cargo build --bins --verbose
+  - cargo build --bins --verbose --release
   - ldd target/debug/dictcc-cli
-  - cargo test --all --verbose
+  - cargo test --verbose
 
 lint:clippy:
   script:
