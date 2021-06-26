@@ -12,9 +12,6 @@ A command line application for translating between languages using dict.cc's dat
 """
 build = "build.rs"
 
-[badges]
-gitlab = { repository = "d-e-s-o/dictcc-cli", branch = "master" }
-
 [dependencies.getopts]
 version = "0.2.15"
 
