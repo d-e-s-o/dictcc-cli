@@ -278,7 +278,7 @@ fn parse_arguments() -> Result<(String, String, Direction)> {
   let argv: Vec<String> = env::args().collect();
   let mut opts = getopts::Options::new();
   opts.optflag("r", "reverse", "Perform reverse lookup, i.e., instead \
-                                from mapping from lang1 to lang2 map \
+                                of mapping from lang1 to lang2, map \
                                 from lang2 to lang1");
   opts.optflag("h", "help", "Print the program's help");
 
