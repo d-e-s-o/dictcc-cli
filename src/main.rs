@@ -1,7 +1,7 @@
 // main.rs
 
 // *************************************************************************
-// * Copyright (C) 2017-2018 Daniel Mueller (deso@posteo.net)              *
+// * Copyright (C) 2017-2022 Daniel Mueller (deso@posteo.net)              *
 // *                                                                       *
 // * This program is free software: you can redistribute it and/or modify  *
 // * it under the terms of the GNU General Public License as published by  *
@@ -240,7 +240,7 @@ where
   );
 
   let to_translate = to_translate.into();
-  let mut cursor = connection.prepare(query)?.cursor();
+  let mut cursor = connection.prepare(query)?.into_cursor();
   cursor.bind(&[
     vec![sqlite::Value::String(to_translate.clone())],
     include!("permutations.in"),

@@ -5,7 +5,7 @@ Unreleased
   project
   - Added badges indicating pipeline status and current crates.io
     published version of the crate
-- Updated `sqlite` dependency to `0.24`
+- Updated `sqlite` dependency to `0.26`
 
 
 0.2.0
